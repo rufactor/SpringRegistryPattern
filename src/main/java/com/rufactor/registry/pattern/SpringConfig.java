@@ -1,4 +1,4 @@
-package com.vlad.sieg.registry.pattern;
+package com.rufactor.registry.pattern;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
