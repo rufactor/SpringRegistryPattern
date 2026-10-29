@@ -6,10 +6,17 @@ public interface EmailGenerator {
 
 	String generate(EmailTemplate emailTemplate);
 
-	String getRegistryCode();
+	default String getRegistryCode() {
+		RegistryCode annotation = getClass().getAnnotation(RegistryCode.class);
+		if (annotation == null) {
+			throw new IllegalStateException(
+					"Class " + getClass().getName() + " must be annotated with @RegistryCode");
+		}
+		return annotation.value();
+	}
 
 	/**
-	 * Setter injection. In all classes that implements this interface this method will be called
+	 * Setter injection. In all classes that implement this interface, this method will be called
 	 * @param emailGeneratorService
 	 */
 	@Autowired

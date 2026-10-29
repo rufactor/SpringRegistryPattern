@@ -2,29 +2,30 @@ package com.rufactor.registry.pattern;
 
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class EmailGeneratorService {
 
-//	private Map<String,EmailGenerator> registries;
-//
-//	@Autowired
-//	public EmailGeneratorService(List<EmailGenerator> emailGeneratorList) {
-//		this.registries = emailGeneratorList.stream().collect(Collectors.toMap(EmailGenerator::getRegistryCode, emailGenerator-> emailGenerator));
-//	}
-
-	private Map<String, EmailGenerator> generatorsRegistry = new HashMap<>();
+	private final ConcurrentMap<String, EmailGenerator> generatorsRegistry = new ConcurrentHashMap<>();
 
 	public void register(String code, EmailGenerator emailGenerator) {
-		generatorsRegistry.put(code, emailGenerator);
+		EmailGenerator previous = generatorsRegistry.putIfAbsent(code, emailGenerator);
+		if (previous != null) {
+			throw new IllegalStateException(
+					"Duplicate registry code '" + code + "' for " + emailGenerator.getClass().getName() +
+					"; already registered by " + previous.getClass().getName());
+		}
 	}
 
 	public void generateTemplate(EmailTemplate emailTemplate) {
 		EmailGenerator emailGenerator = generatorsRegistry.get(emailTemplate.getTemplateCode());
 		if (emailGenerator == null) {
-			throw new UnsupportedOperationException("No generator for this config=" + emailTemplate.getContent() +  " exist.");
+			throw new UnsupportedOperationException(
+					"No generator for template code='" + emailTemplate.getTemplateCode() + "' exists.");
 		}
 		String html = emailGenerator.generate(emailTemplate);
 		sendEmail(html);
@@ -32,6 +33,13 @@ public class EmailGeneratorService {
 
 	private void sendEmail(String html) {
 		System.out.println("Send email = " + html);
+	}
+
+	/**
+	 * Returns an unmodifiable view of the registry for testing purposes.
+	 */
+	public Collection<EmailGenerator> getGenerators() {
+		return Collections.unmodifiableCollection(generatorsRegistry.values());
 	}
 
 }
