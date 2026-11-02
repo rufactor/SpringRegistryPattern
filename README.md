@@ -104,3 +104,83 @@ The `EmailTemplateProducer` runs every 3 seconds and generates two sample emails
 - **Spring Boot 4.1.0**
 - **Lombok** (for boilerplate reduction in `EmailTemplate`)
 - **Gradle** (build tool)
+
+## Setting Up SSH Key for GitHub
+
+To push changes to GitHub without being prompted for credentials, set up SSH key authentication.
+
+### 1. Generate an SSH Key Pair
+
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+```
+
+- Press Enter to accept the default file location (`~/.ssh/id_ed25519`).
+- Press Enter twice to skip the passphrase (recommended for agent/automation use).
+
+> **Note:** If you get `Saving key "~/.ssh/id_ed25519" failed: No such file or directory`, create the directory first:
+> ```bash
+> mkdir -p ~/.ssh
+> chmod 700 ~/.ssh
+> ```
+
+This creates two files in `~/.ssh/`:
+- **`id_ed25519`** — the private key (keep it secret).
+- **`id_ed25519.pub`** — the public key (add this to GitHub).
+
+### 2. Add the Public Key to GitHub
+
+1. Copy the public key:
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   ```
+   Or on macOS:
+   ```bash
+   pbcopy < ~/.ssh/id_ed25519.pub
+   ```
+
+2. Go to GitHub → **Settings** → **SSH and GPG keys** → **New SSH key**.
+
+3. Paste the public key, give it a title (e.g., "Junie Agent"), and click **Add key**.
+
+### 3. Configure Git to Use SSH
+
+If the repository is currently using HTTPS, switch it to SSH:
+
+```bash
+git remote set-url origin git@github.com:<username>/<repo>.git
+```
+
+### 4. Test the Connection
+
+```bash
+ssh -T git@github.com
+```
+
+You should see: *"Hi username! You've successfully authenticated, but GitHub does not provide shell access."*
+
+### 5. For Agent/Automated Use
+
+Load the key into the SSH agent so no passphrase prompt appears:
+
+```bash
+ssh-add ~/.ssh/id_ed25519
+```
+
+On macOS, persist the key across reboots using the keychain:
+
+```bash
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+```
+
+### Quick Reference
+
+| Step | Command |
+|------|---------|
+| Create `.ssh` folder | `mkdir -p ~/.ssh && chmod 700 ~/.ssh` |
+| Generate key | `ssh-keygen -t ed25519 -C "your-email@example.com"` |
+| Copy public key | `cat ~/.ssh/id_ed25519.pub` |
+| Add to GitHub | Settings → SSH and GPG keys → New SSH key |
+| Switch to SSH | `git remote set-url origin git@github.com:user/repo.git` |
+| Test connection | `ssh -T git@github.com` |
+| Load key in agent | `ssh-add ~/.ssh/id_ed25519` |
